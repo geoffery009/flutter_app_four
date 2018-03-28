@@ -39,6 +39,11 @@ flutter:
   assets:
   - assets/ic_cloud_black_24dp.png
   - assets/ic_cloud_black_36dp.png
+  - assets/ic_person_white_36dp.png
+  - assets/ic_location_on_white_36dp.png
+  - assets/ic_settings_white_36dp.png
+  - assets/ic_share_white_36dp.png
+  - assets/ic_bug_report_white_36dp.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.io/assets-and-images/#resolution-aware.
