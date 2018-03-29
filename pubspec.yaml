@@ -13,6 +13,8 @@ dependencies:
   json_annotation: "^0.2.2"
   intl: "^0.15.4"
   shared_preferences: "^0.4.0"
+  share: "^0.4.0"
+  package_info: "^0.3.0"
 
 dev_dependencies:
   flutter_test:

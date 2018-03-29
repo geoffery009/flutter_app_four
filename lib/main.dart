@@ -7,6 +7,11 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'citybean.dart';
+import 'package:share/share.dart';
+import './string.dart';
+import './citylist.dart' as ListScreen;
+import './DotsIndicator.dart';
+import 'package:package_info/package_info.dart';
 
 void main() => runApp(new MyApp());
 
@@ -19,6 +24,9 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       home: new MyHomePage(title: 'Flutter Demo Home Page'),
+      routes: <String, WidgetBuilder>{
+        '/list': (BuildContext context) => new ListScreen.ListWidgetScreen(),
+      },
     );
   }
 }
@@ -56,13 +64,23 @@ class _MyHomePageState extends State<MyHomePage>
   Map<String, dynamic> daysTemp;
 
   bool isCTemp = true;
-  String saveCityKey = "save_city_key";
   List savedCitys;
   int curPosition = 0;
 
   final GlobalKey<ScaffoldState> _curState = new GlobalKey<ScaffoldState>();
   AnimationController animationContrller;
   Animation animation;
+
+  final _controller = new PageController();
+  static const _kDuration = const Duration(milliseconds: 300);
+  static const _kCurve = Curves.ease;
+  final _kArrowColor = Colors.black.withOpacity(0.8);
+
+  PackageInfo _packageInfo = new PackageInfo(
+    packageName: 'Unknown',
+    version: 'Unknown',
+    buildNumber: 'Unknown',
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -75,28 +93,41 @@ class _MyHomePageState extends State<MyHomePage>
         drawer: _showDrawer());
   }
 
-  Widget _showDrawer() {
-    return new Drawer(
-        child: new Column(children: <Widget>[
-      new DrawerHeader(
-          child: new Column(children: <Widget>[
-        new Image(
-            image: new AssetImage("assets/ic_person_white_36dp.png"),
-            color: Colors.amber),
-        new Text("user"),
-      ])),
-      _getDrawerItem(
-          "assets/ic_location_on_white_36dp.png",
-          _currentLocationDes == null
-              ? "当前：定位中..."
-              : "当前：" + _currentLocationDes.toString()),
-      _getDrawerItem("assets/ic_settings_white_36dp.png", "列表"),
-      _getDrawerItem("assets/ic_share_white_36dp.png", "分享"),
-      _getDrawerItem("assets/ic_bug_report_white_36dp.png", "实验室"),
-    ]));
+  Future<Null> _initPackageInfo() async {
+    final PackageInfo info = await PackageInfo.fromPlatform();
+    setState(() {
+      _packageInfo = info;
+    });
   }
 
-  Widget _getDrawerItem(String iconName, String text) {
+  Widget _showDrawer() {
+    return new Drawer(
+      child: new ListView(
+        children: <Widget>[
+          new UserAccountsDrawerHeader(
+            accountName: new Text("版本: " + _packageInfo.version),
+            accountEmail: new Text("test@gmail.com"),
+            currentAccountPicture: new CircleAvatar(
+              child: new Image(
+                  image: new AssetImage("assets/ic_person_white_36dp.png")),
+              backgroundColor: Colors.amber,
+            ),
+          ),
+          _getDrawerItem(
+              "assets/ic_location_on_white_36dp.png",
+              _currentLocationDes == null
+                  ? "当前：定位中..."
+                  : "当前：" + _currentLocationDes.toString(),
+              "location"),
+          _getDrawerItem("assets/ic_settings_white_36dp.png", "列表", "list"),
+          _getDrawerItem("assets/ic_share_white_36dp.png", "分享", "share"),
+          _getDrawerItem("assets/ic_bug_report_white_36dp.png", "实验室", "lab"),
+        ],
+      ),
+    );
+  }
+
+  Widget _getDrawerItem(String iconName, String text, String actionString) {
     return new ListTile(
       leading: new Image(
           image: new AssetImage(iconName),
@@ -107,38 +138,77 @@ class _MyHomePageState extends State<MyHomePage>
       onTap: () {
         // change app state...
         Navigator.pop(context); // close the drawer
+        if (actionString.length == 5) {
+          _shareText();
+        } else if (actionString.length == 4) {
+          Navigator.pushNamed(context, "/list");
+//或
+//          Navigator.push(context, new MaterialPageRoute(builder: (BuildContext context) => new ListScreen.ListWidgetScreen()));
+        }
       },
     );
   }
 
+  _shareText() async {
+    share(Strings.share_text);
+  }
+
   _showPageview() {
     if (savedCitys != null) {
-      return new PageView.builder(
-        itemBuilder: (BuildContext c, int position) {
-          return new RefreshIndicator(
-              child: new ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                children: <Widget>[
-                  _showTop1(),
-                  _showTop2(),
-                  _showTop3(),
-                  _showTop4(),
-                  _showTop5(),
-                  _showDays(),
-                ],
-                padding: const EdgeInsets.only(
-                    left: 24.0, right: 24.0, top: 10.0, bottom: 10.0),
+      return new Stack(
+        children: <Widget>[
+          new PageView.builder(
+            controller: _controller,
+            physics: new AlwaysScrollableScrollPhysics(),
+            itemBuilder: (BuildContext c, int position) {
+              return new RefreshIndicator(
+                  child: new ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    children: <Widget>[
+                      _showTop1(),
+                      _showTop2(),
+                      _showTop3(),
+                      _showTop4(),
+                      _showTop5(),
+                      _showDays(),
+                    ],
+                    padding: const EdgeInsets.only(
+                        left: 24.0, right: 24.0, top: 10.0, bottom: 10.0),
+                  ),
+                  onRefresh: () {
+                    return _getWeatherFromAPI(savedCitys[position]);
+                  });
+            },
+            itemCount: savedCitys.length,
+            onPageChanged: (position) {
+              curPosition = position;
+              _getWeather(savedCitys[position]);
+              debugPrint(position.toString());
+            },
+          ),
+          new Positioned(
+            bottom: 0.0,
+            left: 0.0,
+            right: 0.0,
+            child: new Container(
+              padding: const EdgeInsets.all(20.0),
+              child: new Center(
+                child: new DotsIndicator(
+                  color: Colors.amber.withOpacity(0.5),
+                  controller: _controller,
+                  itemCount: savedCitys.length,
+                  onPageSelected: (int page) {
+                    _controller.animateToPage(
+                      page,
+                      duration: _kDuration,
+                      curve: _kCurve,
+                    );
+                  },
+                ),
               ),
-              onRefresh: () {
-                return _getWeatherFromAPI(savedCitys[position]);
-              });
-        },
-        itemCount: savedCitys.length,
-        onPageChanged: (position) {
-          curPosition = position;
-          _getWeatherFromAPI(savedCitys[position]);
-          debugPrint(position.toString());
-        },
+            ),
+          ),
+        ],
       );
     } else {
       return new Center(
@@ -161,10 +231,7 @@ class _MyHomePageState extends State<MyHomePage>
   _getCity() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-//      savedCitys = prefs.get(saveCityKey);
-      savedCitys = new List();
-      savedCitys.add("南京");
-      savedCitys.add("北京");
+      savedCitys = prefs.getStringList(Strings.saveCityKey);
       cityArr = new List(savedCitys.length);
       dateArr = new List(savedCitys.length);
       today_tempArr = new List(savedCitys.length);
@@ -186,14 +253,17 @@ class _MyHomePageState extends State<MyHomePage>
       debugPrint("city count:" +
           (savedCitys == null ? "0" : savedCitys.length.toString()));
     });
-    _getWeatherFromAPI(savedCitys[0]);
+    _getWeather(savedCitys[0]);
   }
 
   _savetCity(String cityName) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    List list = new List();
+    List list = prefs.getStringList(Strings.saveCityKey);
+    if (list == null) {
+      list = new List();
+    }
     list.add(cityName);
-    prefs.setStringList(saveCityKey, list);
+    prefs.setStringList(Strings.saveCityKey, list);
     _getCity();
   }
 
@@ -542,6 +612,8 @@ class _MyHomePageState extends State<MyHomePage>
     });
 
     _getCity();
+
+    _initPackageInfo();
   }
 
   _initAnimationState() {
@@ -588,36 +660,57 @@ class _MyHomePageState extends State<MyHomePage>
 
 //  }
 
+  _getWeather(String cityNameStr) async {
+    cityArr[curPosition] = cityNameStr;
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    if (prefs.getString(cityNameStr) != null) {
+      debugPrint("got local data--" + cityNameStr);
+      Map<String, dynamic> res = JSON.decode(prefs.getString(cityNameStr));
+      _initWeatherData(res);
+    } else {
+      debugPrint("start get network data");
+      _getWeatherFromAPI(cityNameStr);
+    }
+  }
+
+  _saveWeather(String keyCity, String results) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString(keyCity, results);
+  }
+
+  _initWeatherData(Map<String, dynamic> res) {
+    debugPrint("result:" + res.toString());
+    tipsArr[curPosition] = res["data"]["ganmao"].toString();
+    daysTemp = res["data"];
+    dateArr[curPosition] = res["data"]["forecast"][0]["date"].toString() +
+        "," +
+        res["data"]["forecast"][0]["type"].toString();
+    today_temp_desArr[curPosition] =
+        res["data"]["forecast"][0]["type"].toString();
+
+    today_tempArr[curPosition] = res["data"]["wendu"].toString();
+    String low = res["data"]["forecast"][0]["low"].toString();
+    today_min_tempArr[curPosition] = low.substring(2, low.length - 1);
+    String max = res["data"]["forecast"][0]["high"].toString();
+    today_max_tempArr[curPosition] = max.substring(2, max.length - 1);
+
+    today_windyArr[curPosition] = res["data"]["forecast"][0]["fx"].toString();
+    today_windy_gradeArr[curPosition] =
+        res["data"]["forecast"][0]["fl"].toString();
+    today_dityArr[curPosition] = res["data"]["shidu"].toString();
+    today_pmArr[curPosition] = res["data"]["pm25"].toString();
+
+    setState(() {});
+  }
+
   _getWeatherFromAPI(String cityNameStr) async {
     String url = Strings.get_6_days_weather + cityNameStr;
     debugPrint("search url:" + url);
     http.get(url, headers: null).then((response) {
       Map<String, dynamic> res = JSON.decode(response.body);
       if (res["status"] == 200) {
-        debugPrint("result:" + res.toString());
-        tipsArr[curPosition] = res["data"]["ganmao"].toString();
-        cityArr[curPosition] = cityNameStr;
-        daysTemp = res["data"];
-        dateArr[curPosition] = res["data"]["forecast"][0]["date"].toString() +
-            "," +
-            res["data"]["forecast"][0]["type"].toString();
-        today_temp_desArr[curPosition] =
-            res["data"]["forecast"][0]["type"].toString();
-
-        today_tempArr[curPosition] = res["data"]["wendu"].toString();
-        String low = res["data"]["forecast"][0]["low"].toString();
-        today_min_tempArr[curPosition] = low.substring(2, low.length - 1);
-        String max = res["data"]["forecast"][0]["high"].toString();
-        today_max_tempArr[curPosition] = max.substring(2, max.length - 1);
-
-        today_windyArr[curPosition] =
-            res["data"]["forecast"][0]["fx"].toString();
-        today_windy_gradeArr[curPosition] =
-            res["data"]["forecast"][0]["fl"].toString();
-        today_dityArr[curPosition] = res["data"]["shidu"].toString();
-        today_pmArr[curPosition] = res["data"]["pm25"].toString();
-
-        setState(() {});
+        _saveWeather(cityNameStr, response.body);
+        _initWeatherData(res);
       } else {
         _neverSatisfied(res["message"]);
       }
@@ -664,7 +757,7 @@ class _MyHomePageState extends State<MyHomePage>
         double lat = res["results"][0]["geometry"]["location"]["lat"];
         double lng = res["results"][0]["geometry"]["location"]["lng"];
 
-        _getWeatherFromAPI(cityStr);
+        _getWeather(cityStr);
         setState(() {
           cityArr[position] = cityStr;
         });
@@ -711,21 +804,4 @@ class _MyHomePageState extends State<MyHomePage>
     }
     return fTemp.round().toString() + "°";
   }
-}
-
-class Strings {
-  //搜索地名查询经纬度
-  //city apikey AIzaSyC39y589UkDARiEXsiHTH_TFaV0yC2YPVs
-  //https://maps.googleapis.com/maps/api/place/textsearch/json|xml?query=xxx&key=AIzaSyC39y589UkDARiEXsiHTH_TFaV0yC2YPVs
-  static const String TEXT_SEARCH =
-      "https://maps.googleapis.com/maps/api/place/textsearch/json?key=AIzaSyC39y589UkDARiEXsiHTH_TFaV0yC2YPVs&language=zh-CN&";
-
-  //根据地名查询天气
-  static const String get_6_days_weather =
-      "https://www.sojson.com/open/api/weather/json.shtml?city=";
-
-  //location=32.0386238,118.7813916&
-  //经纬度获取位置描述
-  static const String get_location_description =
-      "https://maps.googleapis.com/maps/api/place/nearbysearch/json?radius=200&types=political&key=AIzaSyC39y589UkDARiEXsiHTH_TFaV0yC2YPVs&language=zh-CN&";
 }
