@@ -18,4 +18,6 @@ class Strings {
   static const String share_text = "app下载链接：http://fir.im/LiveWeathe";
 
   static const String saveCityKey = "save_city_key";
+  //当前位置城市
+  static const String saveLocationCityKey = "save_location_city_key";
 }

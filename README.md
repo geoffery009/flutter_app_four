@@ -6,9 +6,9 @@ A new Flutter application.
 
 PageView中ListView布局, Image，Icon,Text控件<br>
 GestureDetector点击事件;RefreshIndicator下拉刷新<br>
-Route跳转
-UserAccountsDrawerHeader 抽屉布局的用户布局
-CircleAvatar 圆形头像图标
+Route跳转<br>
+UserAccountsDrawerHeader 抽屉布局的用户布局<br>
+CircleAvatar 圆形头像图标<br>
 
 3libs: <br>shared_preferences操作本地缓存，<br>http网络请求，<br>json_annotation转换，<br>intl日期转换,<br>location定位<br>
 share分享<br>
@@ -16,11 +16,11 @@ package_info应用信息
 <br><br>功能： <br>
 展示昨天今天及未来4天天气，温度； 支持℉/℃转换<br>
 
-##记录
-###2018年3月28日
+##记录<br>
+##2018年3月28日<br>
 添加Drawer抽屉布局<br>
 GPS定位经纬度，google api获取地点描述<br>
-###2018年3月29日
+##2018年3月29日<br>
 添加分享功能；<br>
 添加列表<br>
 修改抽屉布局<br>
@@ -28,6 +28,13 @@ Pageview圆点引导<br>
 版本描述<br>
 天气缓存<br>
 
-app:https://fir.im/LiveWeathe?release_id=5aba179c959d697ebc8c50b1
+##2018年3月30日<br>
+添加地点搜索功能，结果保存，并获取选择地点的天气;<br>
+允许添加新地点，删除本地存储的地点；<br>
+首页PageView功能优化：使用PageView.custom方法<br>
+问题:返回首页数据刷新操作未实现；首页添加布局需调整<br>
+城市当前位置标识<br>
 
-![Alt text](assets/Screenshot_20180327-174213.png)
+app:https://fir.im/LiveWeathe
+
+![Alt text](assets/Screenshot_20180330-173816.png)

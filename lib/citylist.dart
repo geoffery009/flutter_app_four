@@ -15,6 +15,13 @@ class _ListWidgetState extends State<ListWidgetScreen> {
   Widget build(BuildContext context) {
     return new Scaffold(
       appBar: new AppBar(
+        actions: <Widget>[
+          new IconButton(
+              icon: new Icon(Icons.add),
+              onPressed: () {
+                _skipAddScreen();
+              })
+        ],
         title: new Text("列表"),
       ),
       body: new Container(child: _showList()),
@@ -29,10 +36,24 @@ class _ListWidgetState extends State<ListWidgetScreen> {
 
   _getSaveData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      items = prefs.getStringList(Strings.saveCityKey);
-      debugPrint("get " + (items == null ? "null" : items.length));
-    });
+    List<String> temp = prefs.getStringList(Strings.saveCityKey);
+    if (temp != null) {
+      items = new List();
+      for (int i = 0; i < temp.length; i++) {
+        items.add(temp[i]);
+      }
+    }
+    setState(() {});
+  }
+
+  _savetCity() async {
+    debugPrint(items.toString());
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    if (items.length == 0) {
+      prefs.setStringList(Strings.saveCityKey, []);
+      return;
+    }
+    prefs.setStringList(Strings.saveCityKey, items);
   }
 
   Widget _showList() {
@@ -43,6 +64,9 @@ class _ListWidgetState extends State<ListWidgetScreen> {
             return new Dismissible(
               key: new Key(items[position]),
               child: new ListTile(
+                onTap: () {
+                  _closeScreen(items[position]);
+                },
                 title: new Text(items[position]),
               ),
               background: new Container(
@@ -53,6 +77,7 @@ class _ListWidgetState extends State<ListWidgetScreen> {
                 Scaffold
                     .of(context)
                     .showSnackBar(new SnackBar(content: new Text("已删除")));
+                _savetCity();
               },
             );
           });
@@ -62,6 +87,17 @@ class _ListWidgetState extends State<ListWidgetScreen> {
           child: new Text("添加"),
         ),
       );
+    }
+  }
+
+  _closeScreen(String name) {
+    Navigator.pop(context, name);
+  }
+
+  _skipAddScreen() async {
+    bool isAdd = await Navigator.pushNamed(context, "/add");
+    if (isAdd) {
+      _getSaveData();
     }
   }
 }
