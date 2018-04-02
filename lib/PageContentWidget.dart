@@ -6,9 +6,10 @@ import 'dart:convert';
 import './string.dart';
 
 class PageContent extends StatefulWidget {
-  PageContent(this.city);
+  PageContent(this.city, this._currentLocationDes);
 
   final String city;
+  final String _currentLocationDes;
 
   @override
   PageContentState createState() => new PageContentState();
@@ -137,6 +138,12 @@ class PageContentState extends State<PageContent> {
 
   Widget _isLocation() {
     if (isLocationCity) {
+      if (widget._currentLocationDes == null) {
+        return new Icon(
+          Icons.location_on,
+          color: Colors.grey,
+        );
+      }
       return new Icon(
         Icons.location_on,
         color: Colors.red,
@@ -252,7 +259,6 @@ class PageContentState extends State<PageContent> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: <Widget>[
           new Container(
-            width: 70.0,
             child: new Column(
               children: <Widget>[
                 new Container(
@@ -265,6 +271,8 @@ class PageContentState extends State<PageContent> {
                       ),
                       new Text(
                         today_windyStr,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                         style: new TextStyle(
                             color: Theme.of(context).primaryColor),
                       )

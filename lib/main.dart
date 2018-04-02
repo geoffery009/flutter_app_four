@@ -76,6 +76,7 @@ class _MyHomePageState extends State<MyHomePage>
 
   _skipAddScreen() {
     Navigator.pushNamed(context, "/add");
+    _getCity();
   }
 
   Widget _showDrawer() {
@@ -127,22 +128,24 @@ class _MyHomePageState extends State<MyHomePage>
 
   _skipListScreen() async {
     String data = await Navigator.pushNamed(context, "/list");
-    if (data != null && data.length > 0) {
-      int pageIndex = -1;
-      for (int i = 0; i < savedCitys.length; i++) {
-        if (data.contains(savedCitys[i])) {
-          pageIndex = i;
-          break;
+    debugPrint("back-----------------");
+    _getCity().then((bool) {
+      if (data != null && data.length > 0) {
+        int pageIndex = -1;
+        for (int i = 0; i < savedCitys.length; i++) {
+          if (data.contains(savedCitys[i])) {
+            pageIndex = i;
+            break;
+          }
+        }
+        debugPrint(
+            "Selected:" + data.toString() + ",index:" + pageIndex.toString());
+        if (pageIndex >= 0) {
+          _controller.animateToPage(pageIndex,
+              duration: kTabScrollDuration, curve: Curves.ease);
         }
       }
-      debugPrint(
-          "Selected:" + data.toString() + ",index:" + pageIndex.toString());
-      if (pageIndex >= 0) {
-        _controller.animateToPage(pageIndex,
-            duration: new Duration(milliseconds: 300),
-            curve: const ElasticInCurve());
-      }
-    }
+    });
   }
 
   _shareText() async {
@@ -158,7 +161,8 @@ class _MyHomePageState extends State<MyHomePage>
             physics: new AlwaysScrollableScrollPhysics(),
             //滚动效果，Android的波纹效果和ios的越界回弹效果
             childrenDelegate: new SliverChildBuilderDelegate(
-                (context, index) => new PageContent(savedCitys[index]),
+                (context, index) =>
+                    new PageContent(savedCitys[index], _currentLocationDes),
                 childCount: savedCitys.length),
           ),
           new Positioned(
@@ -189,20 +193,24 @@ class _MyHomePageState extends State<MyHomePage>
       return new GestureDetector(
           onTap: _skipAddScreen,
           child: new Center(
-            child: new Row(
-              children: <Widget>[new Text("添加"), new Icon(Icons.add)],
+            child: new Container(
+              padding: const EdgeInsets.only(top: 48.0),
+              child: new Column(
+                children: <Widget>[new Text("轻点添加")],
+              ),
             ),
           ));
     }
   }
 
-  _getCity() async {
+  Future<bool> _getCity() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       savedCitys = prefs.getStringList(Strings.saveCityKey);
       debugPrint("city count:" +
           (savedCitys == null ? "0" : savedCitys.length.toString()));
     });
+    return true;
   }
 
   _savetCity(String cityName) async {

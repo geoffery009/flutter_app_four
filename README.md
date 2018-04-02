@@ -4,7 +4,9 @@ A new Flutter application.
 
 ## 说明
 
-PageView中ListView布局, Image，Icon,Text控件<br>
+PageView.custom添加布局，animateToPage指定页面; <br>
+ListView布局; <br>
+Image，Icon,Text控件<br>
 GestureDetector点击事件;RefreshIndicator下拉刷新<br>
 Route跳转<br>
 UserAccountsDrawerHeader 抽屉布局的用户布局<br>
@@ -32,8 +34,15 @@ Pageview圆点引导<br>
 添加地点搜索功能，结果保存，并获取选择地点的天气;<br>
 允许添加新地点，删除本地存储的地点；<br>
 首页PageView功能优化：使用PageView.custom方法<br>
-问题:返回首页数据刷新操作未实现；首页添加布局需调整<br>
 城市当前位置标识<br>
+
+##2018年4月2日<br>
+返回首页数据刷新操作实现；调整首页添加布局<br>
+当前位置城市标识及位置失效标识<br>
+列表指定跳转城市<br>
+
+#问题<br>
+首页添加后不刷新
 
 app:https://fir.im/LiveWeathe
 
