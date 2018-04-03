@@ -15,7 +15,7 @@ class Strings {
   static const String get_location_description =
       "https://maps.googleapis.com/maps/api/place/nearbysearch/json?radius=200&types=political&key=AIzaSyC39y589UkDARiEXsiHTH_TFaV0yC2YPVs&language=zh-CN&";
 
-  static const String share_text = "app下载链接：http://fir.im/LiveWeathe";
+  static const String share_text = "app下载链接：http://fir.im/LiveWeather";
 
   static const String saveCityKey = "save_city_key";
   //当前位置城市

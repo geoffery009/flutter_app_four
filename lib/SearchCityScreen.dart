@@ -46,7 +46,7 @@ class _SearchCityScreenState extends State<SearchCityScreen> {
           new FlatButton(
             child: new Text('ok'),
             onPressed: () {
-              Navigator.of(context).pop();
+              Navigator.of(context).pop(true);
             },
           ),
         ],

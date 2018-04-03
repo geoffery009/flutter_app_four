@@ -65,6 +65,7 @@ class _ListWidgetState extends State<ListWidgetScreen> {
               key: new Key(items[position]),
               child: new ListTile(
                 onTap: () {
+                  debugPrint(position.toString());
                   _closeScreen(items[position]);
                 },
                 title: new Text(items[position]),
@@ -78,6 +79,7 @@ class _ListWidgetState extends State<ListWidgetScreen> {
                     .of(context)
                     .showSnackBar(new SnackBar(content: new Text("已删除")));
                 _savetCity();
+                _getSaveData();
               },
             );
           });

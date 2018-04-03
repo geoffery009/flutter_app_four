@@ -4,7 +4,7 @@ import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import './string.dart';
-import 'package:fluttie/fluttie.dart';
+//import 'package:fluttie/fluttie.dart';
 
 class PageContent extends StatefulWidget {
   PageContent(this.city, this._currentLocationDes);
@@ -30,9 +30,11 @@ class PageContentState extends State<PageContent> {
       tipsStr = "";
 
   Map<String, dynamic> daysTemp;
-  var instance = new Fluttie();
+
+//  var instance = new Fluttie();
   var emojiComposition;
-  FluttieAnimationController shockedEmoji;
+
+//  FluttieAnimationController shockedEmoji;
   bool ready = false;
   bool showLoading = false;
 
@@ -55,7 +57,7 @@ class PageContentState extends State<PageContent> {
                 padding: const EdgeInsets.only(
                     left: 24.0, right: 24.0, top: 10.0, bottom: 10.0),
               ),
-              _showLoadingAnimation()
+//              _showLoadingAnimation()
             ],
           ),
           onRefresh: () {
@@ -69,46 +71,48 @@ class PageContentState extends State<PageContent> {
     super.initState();
     _getWeather();
     _isLocationCityDes();
-    _initLoadingAnimation();
+//    _initLoadingAnimation();
   }
 
-  @override
-  dispose() {
-    super.dispose();
+  /**
+      @override
+      dispose() {
+      super.dispose();
 
-    /// When this widget gets removed (in this app, that won't happen, but it
-    /// can happen for widgets using animations in other situations), we should
-    /// free the resources used by our animations.
-    shockedEmoji?.dispose();
-  }
+      /// When this widget gets removed (in this app, that won't happen, but it
+      /// can happen for widgets using animations in other situations), we should
+      /// free the resources used by our animations.
+      shockedEmoji?.dispose();
+      }
 
-  _initLoadingAnimation() async {
-    bool canBeUsed = await Fluttie.isAvailable();
-    if (!canBeUsed) {
+      _initLoadingAnimation() async {
+      bool canBeUsed = await Fluttie.isAvailable();
+      if (!canBeUsed) {
       print("Animations are not supported on this platform");
       return;
-    }
-    emojiComposition = await instance.loadAnimationFromResource(
-        "assets/animations/emoji_shock.json",
-        bundle: DefaultAssetBundle.of(context));
-    shockedEmoji = await instance.prepareAnimation(emojiComposition,
-        duration: const Duration(seconds: 2),
-        repeatCount: const RepeatCount.infinite(),
-        repeatMode: RepeatMode.START_OVER);
-    if (mounted) {
+      }
+      emojiComposition = await instance.loadAnimationFromResource(
+      "assets/animations/emoji_shock.json",
+      bundle: DefaultAssetBundle.of(context));
+      shockedEmoji = await instance.prepareAnimation(emojiComposition,
+      duration: const Duration(seconds: 2),
+      repeatCount: const RepeatCount.infinite(),
+      repeatMode: RepeatMode.START_OVER);
+      if (mounted) {
       setState(() {
-        ready = true; // The animations have been loaded, we're ready
-        shockedEmoji.start(); //start our looped emoji animation
+      ready = true; // The animations have been loaded, we're ready
+      shockedEmoji.start(); //start our looped emoji animation
       });
-    }
-  }
+      }
+      }
 
-  Widget _showLoadingAnimation() {
-    if (ready && showLoading) {
+      Widget _showLoadingAnimation() {
+      if (ready && showLoading) {
       return new FluttieAnimation(shockedEmoji);
-    }
-    return new Container();
-  }
+      }
+      return new Container();
+      }
+   **/
 
   _getWeather() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -123,16 +127,20 @@ class PageContentState extends State<PageContent> {
   }
 
   _getWeatherFromAPI() async {
-    setState(() {
-      showLoading = true;
-    });
+    if (mounted) {
+      setState(() {
+        showLoading = true;
+      });
+    }
 
     String url = Strings.get_6_days_weather + widget.city;
     debugPrint("search url:" + url);
     http.get(url, headers: null).then((response) {
-      setState(() {
-        showLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          showLoading = false;
+        });
+      }
       Map<String, dynamic> res = JSON.decode(response.body);
       if (res["status"] == 200) {
         _saveWeather2Local(response.body);
@@ -149,23 +157,25 @@ class PageContentState extends State<PageContent> {
   }
 
   _initWeatherData(Map<String, dynamic> res) {
-    setState(() {
-      daysTemp = res["data"];
-      dateStr = res["data"]["forecast"][0]["date"].toString() +
-          "," +
-          res["data"]["forecast"][0]["type"].toString();
-      today_tempStr = res["data"]["wendu"].toString();
-      String low = res["data"]["forecast"][0]["low"].toString();
-      today_min_tempStr = low.substring(2, low.length - 1);
-      String max = res["data"]["forecast"][0]["high"].toString();
-      today_max_tempStr = max.substring(2, max.length - 1);
+    if (mounted) {
+      setState(() {
+        daysTemp = res["data"];
+        dateStr = res["data"]["forecast"][0]["date"].toString() +
+            "," +
+            res["data"]["forecast"][0]["type"].toString();
+        today_tempStr = res["data"]["wendu"].toString();
+        String low = res["data"]["forecast"][0]["low"].toString();
+        today_min_tempStr = low.substring(2, low.length - 1);
+        String max = res["data"]["forecast"][0]["high"].toString();
+        today_max_tempStr = max.substring(2, max.length - 1);
 
-      today_windyStr = res["data"]["forecast"][0]["fx"].toString();
-      today_windy_gradeStr = res["data"]["forecast"][0]["fl"].toString();
-      today_dityStr = res["data"]["shidu"].toString();
-      today_pmStr = res["data"]["pm25"].toString();
-      tipsStr = res["data"]["ganmao"].toString();
-    });
+        today_windyStr = res["data"]["forecast"][0]["fx"].toString();
+        today_windy_gradeStr = res["data"]["forecast"][0]["fl"].toString();
+        today_dityStr = res["data"]["shidu"].toString();
+        today_pmStr = res["data"]["pm25"].toString();
+        tipsStr = res["data"]["ganmao"].toString();
+      });
+    }
   }
 
   Widget _showTop1() {
@@ -232,9 +242,11 @@ class PageContentState extends State<PageContent> {
   }
 
   _changeTempType() {
-    setState(() {
-      isCTemp = !isCTemp;
-    });
+    if (mounted) {
+      setState(() {
+        isCTemp = !isCTemp;
+      });
+    }
   }
 
   Widget _showTop2() {
@@ -550,10 +562,12 @@ class PageContentState extends State<PageContent> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     if (prefs.getString(Strings.saveLocationCityKey) != null &&
         widget.city != null) {
-      setState(() {
-        isLocationCity =
-            widget.city.contains(prefs.getString(Strings.saveLocationCityKey));
-      });
+      if (mounted) {
+        setState(() {
+          isLocationCity = widget.city
+              .contains(prefs.getString(Strings.saveLocationCityKey));
+        });
+      }
     }
   }
 }

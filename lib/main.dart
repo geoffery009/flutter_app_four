@@ -4,9 +4,7 @@ import 'dart:convert';
 import 'package:location/location.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'citybean.dart';
 import 'package:share/share.dart';
 import './string.dart';
 import './citylist.dart' as ListScreen;
@@ -14,10 +12,13 @@ import './SearchCityScreen.dart' as AddScreen;
 import './DotsIndicator.dart';
 import 'package:package_info/package_info.dart';
 import './PageContentWidget.dart';
+import 'package:flutter_webview_plugin/flutter_webview_plugin.dart';
 
 void main() => runApp(new MyApp());
 
 class MyApp extends StatelessWidget {
+  final String selectedUrl = "http://fir.im/LiveWeathe";
+
   @override
   Widget build(BuildContext context) {
     return new MaterialApp(
@@ -29,6 +30,14 @@ class MyApp extends StatelessWidget {
       routes: <String, WidgetBuilder>{
         '/list': (BuildContext context) => new ListScreen.ListWidgetScreen(),
         '/add': (BuildContext context) => new AddScreen.SearchCityScreen(),
+        "/web": (BuildContext context) => new WebviewScaffold(
+              url: selectedUrl,
+              appBar: new AppBar(
+                title: new Text("Widget webview"),
+              ),
+              withZoom: true,
+              withLocalStorage: true,
+            )
       },
     );
   }
@@ -74,9 +83,11 @@ class _MyHomePageState extends State<MyHomePage>
         drawer: _showDrawer());
   }
 
-  _skipAddScreen() {
-    Navigator.pushNamed(context, "/add");
-    _getCity();
+  _skipAddScreen() async {
+    bool isAdd = await Navigator.pushNamed(context, "/add");
+    if (isAdd) {
+      _getCity();
+    }
   }
 
   Widget _showDrawer() {
@@ -121,9 +132,15 @@ class _MyHomePageState extends State<MyHomePage>
           _shareText();
         } else if (actionString.length == 4) {
           _skipListScreen();
+        } else if (actionString.length == 3) {
+          _skipWebScreen();
         }
       },
     );
+  }
+
+  _skipWebScreen() {
+    Navigator.pushNamed(context, "/web");
   }
 
   _skipListScreen() async {
@@ -205,11 +222,13 @@ class _MyHomePageState extends State<MyHomePage>
 
   Future<bool> _getCity() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      savedCitys = prefs.getStringList(Strings.saveCityKey);
-      debugPrint("city count:" +
-          (savedCitys == null ? "0" : savedCitys.length.toString()));
-    });
+    if (mounted) {
+      setState(() {
+        savedCitys = prefs.getStringList(Strings.saveCityKey);
+        debugPrint("city count:" +
+            (savedCitys == null ? "0" : savedCitys.length.toString()));
+      });
+    }
     return true;
   }
 
@@ -233,10 +252,12 @@ class _MyHomePageState extends State<MyHomePage>
     _locationSubscription =
         _location.onLocationChanged.listen((Map<String, double> result) {
       _getLocationDesFromAPI();
-      setState(() {
-        debugPrint("location:" + _currentLocation.toString());
-        _currentLocation = result;
-      });
+      if (mounted) {
+        setState(() {
+          debugPrint("location:" + _currentLocation.toString());
+          _currentLocation = result;
+        });
+      }
     });
 
     _getCity();
@@ -257,9 +278,11 @@ class _MyHomePageState extends State<MyHomePage>
 
   Future<Null> _initPackageInfo() async {
     final PackageInfo info = await PackageInfo.fromPlatform();
-    setState(() {
-      _packageInfo = info;
-    });
+    if (mounted) {
+      setState(() {
+        _packageInfo = info;
+      });
+    }
   }
 
   _getLocationDesFromAPI() async {
@@ -276,9 +299,11 @@ class _MyHomePageState extends State<MyHomePage>
           String cityStr = res["results"][0]["vicinity"].toString();
           cityStr = cityStr.substring(0, cityStr.length - 1);
           _saveLocationCity();
-          setState(() {
-            _currentLocationDes = cityStr;
-          });
+          if (mounted) {
+            setState(() {
+              _currentLocationDes = cityStr;
+            });
+          }
         } else {
           debugPrint(res["error_message"]);
         }

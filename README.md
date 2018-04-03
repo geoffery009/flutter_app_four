@@ -14,6 +14,7 @@ CircleAvatar 圆形头像图标<br>
 
 3libs: <br>shared_preferences操作本地缓存，<br>http网络请求，<br>json_annotation转换，<br>intl日期转换,<br>location定位<br>
 share分享<br>
+flutter_webview_plugin打开webview<br>
 package_info应用信息
 <br><br>功能： <br>
 展示昨天今天及未来4天天气，温度； 支持℉/℃转换<br>
@@ -42,10 +43,11 @@ Pageview圆点引导<br>
 列表指定跳转城市<br>
 
 ##2018年4月3日<br>
-添加lottie动画
+添加lottie动画(三方包有问题)<br>
+打开网页<br>
 
 #问题<br>
-首页添加后不刷新
+无
 
 app:https://fir.im/LiveWeathe
 
