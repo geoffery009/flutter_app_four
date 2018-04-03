@@ -15,6 +15,7 @@ dependencies:
   shared_preferences: "^0.4.0"
   share: "^0.4.0"
   package_info: "^0.3.0"
+  fluttie: "^0.2.0"
 
 dev_dependencies:
   flutter_test:
@@ -48,6 +49,7 @@ flutter:
   - assets/ic_bug_report_white_36dp.png
   - assets/ic_wb_sunny_black_36dp.png
   - assets/ic_cloud_queue_white_48dp.png
+  - assets/animations/sun_burst_weather_icon.json
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.io/assets-and-images/#resolution-aware.

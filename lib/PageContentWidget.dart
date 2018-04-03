@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import './string.dart';
+import 'package:fluttie/fluttie.dart';
 
 class PageContent extends StatefulWidget {
   PageContent(this.city, this._currentLocationDes);
@@ -29,23 +30,33 @@ class PageContentState extends State<PageContent> {
       tipsStr = "";
 
   Map<String, dynamic> daysTemp;
+  var instance = new Fluttie();
+  var emojiComposition;
+  FluttieAnimationController shockedEmoji;
+  bool ready = false;
+  bool showLoading = false;
 
   @override
   Widget build(BuildContext context) {
     return new Container(
       child: new RefreshIndicator(
-          child: new ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
+          child: new Stack(
             children: <Widget>[
-              _showTop1(),
-              _showTop2(),
-              _showTop3(),
-              _showTop4(),
-              _showTop5(),
-              _showDays(),
+              new ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: <Widget>[
+                  _showTop1(),
+                  _showTop2(),
+                  _showTop3(),
+                  _showTop4(),
+                  _showTop5(),
+                  _showDays(),
+                ],
+                padding: const EdgeInsets.only(
+                    left: 24.0, right: 24.0, top: 10.0, bottom: 10.0),
+              ),
+              _showLoadingAnimation()
             ],
-            padding: const EdgeInsets.only(
-                left: 24.0, right: 24.0, top: 10.0, bottom: 10.0),
           ),
           onRefresh: () {
             return _getWeatherFromAPI();
@@ -58,6 +69,45 @@ class PageContentState extends State<PageContent> {
     super.initState();
     _getWeather();
     _isLocationCityDes();
+    _initLoadingAnimation();
+  }
+
+  @override
+  dispose() {
+    super.dispose();
+
+    /// When this widget gets removed (in this app, that won't happen, but it
+    /// can happen for widgets using animations in other situations), we should
+    /// free the resources used by our animations.
+    shockedEmoji?.dispose();
+  }
+
+  _initLoadingAnimation() async {
+    bool canBeUsed = await Fluttie.isAvailable();
+    if (!canBeUsed) {
+      print("Animations are not supported on this platform");
+      return;
+    }
+    emojiComposition = await instance.loadAnimationFromResource(
+        "assets/animations/emoji_shock.json",
+        bundle: DefaultAssetBundle.of(context));
+    shockedEmoji = await instance.prepareAnimation(emojiComposition,
+        duration: const Duration(seconds: 2),
+        repeatCount: const RepeatCount.infinite(),
+        repeatMode: RepeatMode.START_OVER);
+    if (mounted) {
+      setState(() {
+        ready = true; // The animations have been loaded, we're ready
+        shockedEmoji.start(); //start our looped emoji animation
+      });
+    }
+  }
+
+  Widget _showLoadingAnimation() {
+    if (ready && showLoading) {
+      return new FluttieAnimation(shockedEmoji);
+    }
+    return new Container();
   }
 
   _getWeather() async {
@@ -73,9 +123,16 @@ class PageContentState extends State<PageContent> {
   }
 
   _getWeatherFromAPI() async {
+    setState(() {
+      showLoading = true;
+    });
+
     String url = Strings.get_6_days_weather + widget.city;
     debugPrint("search url:" + url);
     http.get(url, headers: null).then((response) {
+      setState(() {
+        showLoading = false;
+      });
       Map<String, dynamic> res = JSON.decode(response.body);
       if (res["status"] == 200) {
         _saveWeather2Local(response.body);
